@@ -96,7 +96,7 @@ or as a docker container (see the dockerfile)
 now let's insert some data in postgresql
 
 ```sql
-insert into test(pk, a, b, c, d) values (4, 'd', 'e', 1, True);
+insert into test(pk, a, b, c, d) values (4, 'd', 1, current_timestamp, True);
 ```
 
 and check it has been copied to clickhouse
