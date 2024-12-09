@@ -119,7 +119,7 @@ select * from test;
 
 a delete in postgresql
 
-```
+```sql
 delete from test where pk = 3;
 ```
 
