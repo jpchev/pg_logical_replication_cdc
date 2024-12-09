@@ -11,7 +11,10 @@ This example shows how to use the logical replication in Postgresql to capture d
 create in pg a publication for a give table and a replication slot
 
 ```sql
+create table test(pk integer primary key, a text, b Integer, c timestamp without time zone DEFAULT now(), d boolean);
+
 create publication mypub for table only test;
+
 -- the slot uses the pgoutput binary replication plugin, available by default in pg
 select * from pg_create_logical_replication_slot('test_slot', 'pgoutput');
 ```
@@ -24,10 +27,9 @@ The *begin* and *commit* events correspond to the beginning and the end of the t
 
 The *insert* event contains all data about the insert operation.
 
-### create data in postgresql
+### insert data in postgresql
 
 ```sql
-create table test(pk integer primary key, a text, b Integer, c timestamp without time zone DEFAULT now(), d boolean);
 insert into test(pk, a, b, c, d) values (1, 'a', 1, current_timestamp, True);
 insert into test(pk, a, b, c, d) values (2, 'c', 2, current_timestamp, True);
 insert into test(pk, a, b, c, d) values (3, 'e', 3, current_timestamp, True);
