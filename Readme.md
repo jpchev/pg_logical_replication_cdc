@@ -16,30 +16,13 @@ create publication mypub for table only test;
 select * from pg_create_logical_replication_slot('test_slot', 'pgoutput');
 ```
 
-then set the environment variables 
-```bash
-export DATABASE_NAME=...
-export DATABASE_USERNAME=...
-export DATABASE_PASSWORD=...
-export DATABASE_HOST=...
-export DATABASE_PORT=...
+There are several types of events, for example in case of an insert, the following four events are generated in this order: *relation*, *begin*, *insert*, *commit*.
 
-export PG_PUBLICATION_NAME=mypub
-export PG_REPLICATION_SLOT=test_slot
+The *relation* event contains data about the table whose events are being captured in the following events, its columns with their type, the schema, etc.
 
-export CLICKHOUSE_HOSTNAME=...
-export CLICKHOUSE_USERNAME=...
-export CLICKHOUSE_PORT=...
-export CLICKHOUSE_PASSWORD=...
-export CLICKHOUSE_DATABASE=...
-```
-and run the python program with the following command
+The *begin* and *commit* events correspond to the beginning and the end of the transaction, LSN, transaction id, commit timestamp… In the above example the transaction contains an *insert* event.
 
-```bash
-python /work/cdc_logical_replication_pgoutput.py
-```
-
-or as a docker container (see the dockerfile)
+The *insert* event contains all data about the insert operation.
 
 ### create data in postgresql
 
@@ -66,7 +49,7 @@ create table if not exists test
 ORDER BY(pk);
 ```
 
-#### initial load
+#### initial load in Clickhouse
 
 ```sql
 truncate table test;
@@ -81,37 +64,64 @@ FROM postgresql('postgres-host.domain.com:5432', 'db_in_psg', 'test', 'clickhous
 
 ```
 
-postgresql
+#### Run the python code to capture data
+
+Set the environment variables 
+```bash
+export DATABASE_NAME=...
+export DATABASE_USERNAME=...
+export DATABASE_PASSWORD=...
+export DATABASE_HOST=...
+export DATABASE_PORT=...
+
+export PG_PUBLICATION_NAME=mypub
+export PG_REPLICATION_SLOT=test_slot
+
+export CLICKHOUSE_HOSTNAME=...
+export CLICKHOUSE_USERNAME=...
+export CLICKHOUSE_PORT=...
+export CLICKHOUSE_PASSWORD=...
+export CLICKHOUSE_DATABASE=...
+```
+and run the python program with the following command
+
+```bash
+python /work/cdc_logical_replication_pgoutput.py
+```
+
+or as a docker container (see the dockerfile)
+
+now let's insert some data in postgresql
 
 ```sql
 insert into test(pk, a, b, c, d) values (4, 'd', 'e', 1, True);
 ```
 
-check clickhouse
+and check it has been copied to clickhouse
 
 ```sql
 select * from test;
 ```
 
-postgresql
+let's update in postgresql
 
 ```sql
 update test set a = 'c' where pk = 3;
 ```
 
-check clickhouse
+and check it has been performed in clickhouse too
 
 ```sql
 select * from test;
 ```
 
-postgresql
+a delete in postgresql
 
 ```
 delete from test where pk = 3;
 ```
 
-check clickhouse
+and check it has been performed in clickhouse too
 
 ```sql
 select * from test;
