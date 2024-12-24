@@ -150,3 +150,13 @@ drop publication mypub;
 ```sql
 select pg_logical_slot_get_binary_changes('test_slot', NULL, NULL, 'publication_names', 'mypub', 'proto_version', '1');
 ```
+
+### caveats
+
+The python code shows how to replicate insert, update and delete operations, but keep in mind that mutations (update and delete operations) in Clickhouse are possible but discouraged in favor of insert operations, as Clickhouse storage is immutable and optimised for high volume writes. See [details](https://clickhouse.com/docs/en/guides/developer/mutations).
+
+Another approach would be to perform only insert operations in Clickhouse, also for update and delete events, in a version-like fashion. That means extra columns should be added to tables, to keep track of record timestamps and/or version number, then at query time those columns would be used to select latest version of records or we could rely on ReplacingMergeTree in Clickhouse, a table engine which would remove duplicates, but that would happen only during merge operations, happening in the background at un unknown time, so data would be eventually consistent.
+
+### future developments
+
+It would probably be better to use the pg program pg_recvlogical to receive WAL events and then pipe its output to a python program performing only the decoding and formatting.
